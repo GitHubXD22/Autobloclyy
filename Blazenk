@@ -1,0 +1,52 @@
+-- Wait for the player and their character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local remote = game:GetService("ReplicatedStorage").LightsaberRemotes.Block
+
+-- Variable to prevent constant blocking
+local isBlocking = false
+
+-- Function to block when an enemy gets close
+local function autoBlock()
+    if not isBlocking then
+        isBlocking = true
+        remote:FireServer()
+        wait(0.5) -- Add a delay to avoid spamming
+        isBlocking = false
+    end
+end
+
+-- Detect proximity of enemies
+local function detectEnemyProximity()
+    while wait(0.1) do
+        for _, playerInGame in pairs(game.Players:GetPlayers()) do
+            if playerInGame ~= player then
+                local enemyCharacter = playerInGame.Character
+                if enemyCharacter and enemyCharacter:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
+                    local distance = (character.HumanoidRootPart.Position - enemyCharacter.HumanoidRootPart.Position).Magnitude
+                    if distance < 10 and not isBlocking then -- Only block if not currently blocking
+                        autoBlock()
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Start the proximity detection loop
+task.spawn(detectEnemyProximity)
+
+-- Function to detect if the player is pressing attack
+local function onAttack()
+    if not isBlocking then
+        -- Add the code to initiate your attack here
+        print("Attacking")
+    end
+end
+
+-- Hook up attack event if needed, replace with actual attack event
+-- Example: 
+-- game.ReplicatedStorage.LightsaberRemotes.Attack.OnClientEvent:Connect(onAttack)
+
+print("Proximity-based Auto-Block script loaded successfully.")
